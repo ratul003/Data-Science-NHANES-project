@@ -1,0 +1,408 @@
+* My aim for this project is to analyse how socioeconomic status effects     health.    Socioeconomic status in my data can be referred to Income and      Poverty Index.     But there are also other factors that may play major role    in the socioeconomic status of an individual such as #hrs worked, legal    time in US, Maritial Status, Education Level, Race and Country of Birth.    Having said that, I'm looking forward to analyse the relation between      these factors and see how it impacts health condition using statistical    methods for eg Multivariate Regression Analysis. Also, my key data would
+be different health criteria such as blood pressure, #times visited a      doctor etc. I would be covering multiple aspects of health condition to    evaluate the relations more effectively with socioeconomic status.
+
+* I'll be using the NHANES data package that is providing me with huge 
+data but I'll be breaking down into the variables that I would need to 
+analyse. The data is collected from the National Health and Nutrition 
+Examination Survey(NHANES), URL: 
+  https://cran.r-project.org/package=nhanesA in an SAS.'XPT' format. 
+
+* I have 4 types of NHANES tables and I would be using 'EXAM' ,        
+'DIET','QUESTIONARRE', 'DEMOGRAPHICS' for my anaylsis. I would be using    23 different tables with each column representing different      
+things.Again, I have selected columns of different variables that I 
+would be playing with. In this dataframe I have categorical variables.     and
+quantitative variables. The factor variables would be   
+'hpt','gendr','marst','pregst','race' and 'cbirth'. The rest are 
+qualitative variables.
+
+
+* Downloading the Survey to Rstudi from the NHANES package:
+  
+  ```{r}
+library(nhanesA)
+q2013names<-nhanesTables('Q',2013,namesonly = TRUE)
+q2013tables<-lapply(q2013names,nhanes)
+names(q2013tables)<-q2013names
+EXAM2013names<-nhanesTables('EXAM',2013,namesonly = TRUE)
+EXAM2013tables<-lapply(EXAM2013names,nhanes)
+names(EXAM2013tables)<-EXAM2013names
+DEMO2013names<-nhanesTables('DEMO',2013,namesonly =TRUE)
+DEMO2013tables<-lapply(EXAM2013names,nhanes)
+names(DEMO2013tables)<-DEMO2013names
+DIET2013names<-nhanesTables('DIET',2013,namesonly=TRUE)
+DIET2013tables<-lapply(DIET2013names,nhanes)
+names(DIET2013tables)<-DIET2013names
+
+
+```
+
+* Listing down the NHANES categories:
+  
+  
+  ```{r, echo=FALSE}
+nhanesTables('EXAM',2013)
+nhanesTables('DIET',2013)
+nhanesTables('Q',2013)
+nhanesTables('DEMO',2013)
+test=nhanesTranslate('DEMO_H',c('RIAGENDR','DMDMARTL','DMDYRSUS','INDHHIN2','RIDRETH1','RIDEXPRG','DMDHREDU','DMDHRBR4'),data=nhanes('DEMO_H'))
+test=nhanesTranslate('HEQ_H',c('HEQ010'),data=nhanes('HEQ_H'))
+test1=nhanesTranslate('HUQ_H',c('HUQ051'),data=nhanes('HUQ_H'))
+test2=nhanesTranslate('INQ_H',c('IND235'),data=nhanes('INQ_H'))
+test3=nhanesTranslate('OHQ_H',c('OHQ620'),data=nhanes('OHQ_H'))
+test4=nhanesTranslate('PAQ_H',c('PAQ710'),data=nhanes('PAQ_H'))
+```
+
+*Now assigning names to each NHANES Tables:
+  
+  ```{r}
+bpx_h<-nhanes('BPX_H')
+bmx_h<-nhanes('BMX_H')
+ds_h<-nhanes('DSQIDS_H')
+alq_h<-nhanes('ALQ_H')
+cb_h<-nhanes('CBQ_H')
+dmt_h<-nhanes('DEQ_H')
+dsb_h<-nhanes('DLQ_H')
+hpt_h<-nhanes('HEQ_H')
+hua_h<-nhanes('HUQ_H')
+inc_h<-nhanes('INQ_H')
+ocs_h<-nhanes('OCQ_H')
+orh_h<-nhanes('OHQ_H')
+pha_h<-nhanes('PAQ_H')
+sld_h<-nhanes('SLQ_H')
+smk_h<-nhanes('SMQ_H')
+demo_h<-nhanesTranslate('DEMO_H',c('RIAGENDR','DMDMARTL','DMDYRSUS','INDHHIN2','RIDRETH1','RIDEXPRG','DMDHREDU','DMDHRBR4'),data=nhanes('DEMO_H'))
+hpt_h<-nhanesTranslate('HEQ_H',c('HEQ010'),data=nhanes('HEQ_H'))
+inc_h<-nhanesTranslate('INQ_H',c('IND235'),data=nhanes('INQ_H'))
+orh_h<-nhanesTranslate('OHQ_H',c('OHQ620'),data=nhanes('OHQ_H'))
+pha_h<-nhanesTranslate('PAQ_H',c('PAQ710'),data=nhanes('PAQ_H'))
+hua_h<-nhanesTranslate('HUQ_H',c('HUQ051'),data=nhanes('HUQ_H'))
+```
+
+
+
+* Now selecting specific columns from each variable: 
+  
+  ```{r}
+to.keep=c("BPXSY1","BPXDI1")
+bpx<-bpx_h[,to.keep]
+to.keep=c("BMXWT","BMXHT","BMXBMI")
+bmx<-bmx_h[,to.keep]
+to.keep=c("DSQIPROT","DSQICARB","DSQITFAT")
+ds<-ds_h[,to.keep]
+to.keep=c("ALQ120Q")
+alq<-data.frame(alq_h[,to.keep])
+to.keep=c("CBD120")
+cf<-cb_h[,to.keep]
+to.keep=c("DED125")
+dmt<-dmt_h[,to.keep]
+to.keep=c("HEQ010")
+hpt<-hpt_h[,to.keep]
+to.keep=c("HUQ051")
+hc<-hua_h[,to.keep]
+to.keep=c("IND235","INDFMMPI")
+inc<-inc_h[,to.keep]
+to.keep=c("OCQ180")
+och<-ocs_h[,to.keep]
+to.keep=c("OHQ620")
+orh<-orh_h[,to.keep]
+to.keep=c("PAQ710","PAD680")
+pha<-pha_h[to.keep]
+to.keep=c("SLD010H")
+slp<-sld_h[,to.keep]
+to.keep=c("SMD650")
+smk<-smk_h[,to.keep]
+to.keep=c("RIAGENDR","DMDYRSUS","DMDMARTL","INDHHIN2","DMDHREDU","RIDRETH1","DMDHRBR4","RIDEXPRG")
+demo<-demo_h[,to.keep]
+```
+
+* Now renaming the columns: 
+  
+  ```{r}
+colnames(demo)=letters[1:8]
+library(data.table)
+setnames(demo,old=c("a","b","c","d","e", "f","g","h"),new=c("gendr","timeUS","marst","hhinc","educ","race","cbirth","pregst"))
+
+colnames(bpx)=letters[1:2]
+setnames(bpx,old=c("a","b"),new=c("UpBP","LoBP"))
+colnames(bmx)=letters[1:3]
+setnames(bmx,old=c("a","b","c"),new=c("wght","hght","massindx"))
+colnames(ds)=letters[1:3]
+setnames(ds,old=c("a","b","c"),new=c("protein","carbo","fat"))
+colnames(inc)=letters[1:2]
+setnames(inc,old=c("a","b"),new=c("Monthinc","FamPovIndex"))
+colnames(pha)=letters[1:2]
+setnames(pha,old=c("a","b"),new=c("tvHrs","sedentAct"))
+to.keep=c("HEQ010")
+hpt<-data.frame(hpt_h[,to.keep])
+colnames(hpt)="Hepatitis B"
+to.keep=c("ALQ120Q")
+alq<-data.frame(alq_h[,to.keep])
+colnames(alq)="alc/yr"
+to.keep=c("CBD120")
+cf<-data.frame(cb_h[,to.keep])
+colnames(cf)="FoodConsumption"
+to.keep=c("DED125")
+dmt<-data.frame(dmt_h[,to.keep])
+colnames(dmt)="Hrs spent outdoor"
+to.keep=c("HUQ051")
+hc<-data.frame(hua_h[,to.keep])
+colnames(hc)="TimesVisitedDoctor"
+to.keep=c("OHQ620")
+orh<-data.frame(orh_h[,to.keep])
+colnames(orh)="toothache/yr"
+to.keep=c("SLD010H")
+slp<-data.frame(sld_h[,to.keep])
+colnames(slp)="Amount of sleep"
+to.keep=c("SMD650")
+smk<-data.frame(smk_h[,to.keep])
+colnames(smk)="no of cigs smoked"
+```
+
+
+
+*List of columns with summary of the variables used:
+  ```{r}
+library(nhanesA)
+load(file="Projectable.rdata")
+attributes(Mytable)
+```
+
+* Number of rows and type of variables in the data:
+  ```{r}
+summary(Mytable)
+```
+
+```{r}
+lapply(Mytable,summary)
+```
+
+```{r}
+hist(bpx$UpBP,main="Histogram of Upper Blood Pressure",ylab="Frequency",xlab="BloodPressure",col="orange",cex.axis=0.50)
+hist(bpx$LoBP,main="Histogram of Lower Blood Pressure",ylab="Frequency",xlab="BloodPressure",col="red",cex.axis=0.50)
+hist(bmx$wght,main="Histogram of population weight",ylab="Frequency",xlab="weight",col="purple",cex.axis=0.5)
+hist(bmx$hght,main="Histogram of population height",ylab="Frequency",xlab="Height",col="yellow",cex.axis=0.5)
+hist(bmx$massindx,main="Histogram of population MassIndex",ylab="Frequency",xlab="massindex",col="maroon",cex.axis=0.5)
+barplot(table(Mytable$Monthinc),main = "Histogram of family monthly income",ylab="frequency",xlab="monthly income",col="blue",cex.axis=0.5,cex.names = 0.5)
+hist(Mytable$FamPovIndex,main = "Histogram of family monthly poverty index",ylab="frequency",xlab="povertyindex",col="violet",cex.axis=0.5)
+barplot(table(Mytable$gendr),xlab="age(in yrs)",ylab="count",main="barplot of gender distribution",col = "red")
+barplot(table(Mytable$timeUS),xlab="time(in yrs)",ylab="count",main="barplot of amount years spend in US",col = "yellow",cex.names =0.5)
+barplot(table(Mytable$marst),xlab="maritial status",ylab="count",main="barplot of marital status ",col = "purple",cex.names =0.5)
+barplot(table(Mytable$hhinc),xlab="income",ylab="count",main="barplot of household income",col = "pink",cex.names =0.5)
+barplot(table(Mytable$educ),xlab="level of education",ylab="count",main="barplot of level of education",col = "blue",cex.names =0.5,cex.axis = 0.5)
+barplot(table(Mytable$race),xlab="ethinicity",ylab="count",main="barplot of ethnicity",col = "orange",cex.names =0.5,cex.axis=0.4)
+barplot(table(Mytable$cbirth),xlab="time(in yrs)",ylab="count",main="barplot of gender distribution",col = "yellow",cex.names =0.5)
+barplot(table(Mytable$cbirth),xlab="time(in yrs)",ylab="count",main="barplot of region taken birth",col = "green",cex.names =0.5,cex.axis = 0.5)
+barplot(table(Mytable$pregst),xlab="pregnant status",ylab="count",main="barplot of gender distribution",col = "violet",cex.names =0.5,cex.axis = 0.5)
+barplot(table(Mytable$TimesVisitedDoctor),xlab="Visited Doctor",ylab="count",main="barplot of times visited doctor",col = "royal blue",cex.names =0.5,cex.axis = 0.5)
+
+```
+
+
+
+From the health indicators we can notice that the Upper Blood Pressure and Body Mass Index share very similar distribution. We might be able to see a relation between how body mass index of a sample is correlated with blood pressure or how blood pressure is related to obesity.
+
+There are very similar distributuion between number of times visited doctor against monthly income of sample. We would like to dig into it and see how samples react to the number of times visited doctor is correlated with monthly income along with different gender. Moreover, we would also like to see how the number of times visited doctor is distributed between gender.
+
+We can also see an interesting correlation between the poverty level index and education.It is highly regarded that poverty depends heavily on level of education. But with the sample data that we have extracted from Nhanes, we would likely be able to see how they are inter-connected.
+
+Also poverty index and times visited doctor are skewed to the right in their respective barplot. Maybe there can be a connection between these variables. We are intrigue whether they have any relation.
+
+
+
+* Sanity Checks
+```{r}
+Mytable$UpBP<-ifelse(Mytable$UpBP>170,NA,Mytable$UpBP)
+Mytable$LoBP<-ifelse(Mytable$LoBP>=90 & Mytable$LoBP<=40,NA,Mytable$LoBP)
+Mytable$massindx<-ifelse(Mytable$massindx>40,NA,Mytable$massindx)
+```
+
+Upper Blood Pressure (UpBP) : The Max Bp is 228 and the Min Bp is 66 which seems unrealistic for an individual sample to BP over 170. They are considered to be outliers and we would ignore those two specific values as NA's as they would bring insignificant changes given we have large number of observations with large NA's. Any value over 170 is considered NA's.
+
+
+Lower Blood Pressure (LoBP) : We have similar unrealistic Min BP zero and Max Bp of 122. They are considered to be outliers and we will try to see the relation between what majority of the sample have bloodpressure to find relation with BMI. Any value over 90 is considered to be NA's. In our next step for regression model, NA's would be overlooked. 
+
+
+Body Mass Index (BMI): The Min BMI 12.10 is something that can be worked on, but the Max BMI of 82.90 seems unrealistic. Any BMI >40 defines unusual obesity and we would consider them as NA's and work on analysing correlation.
+
+
+
+Other variables that I would be using on my project from my sample have no unrealistic values.
+
+I'll show how those variables are connected in my next step.
+
+
+I have extracted data from nhnanes data set. My data was in an usable format in coded values. I had to translate all them using the translate command. The major challenge for me was my data contained a lot of different tables with huge number of rows and columns. I had to extract the certain tables with specific columns and rename them for easier understanding which was time consuming for me.Moreover, I had to get rid of a lot of variables as they contained too much NA values. Initially, I thought of showing how the socioeconomic status affects health using the health and economic indicators. However, like I said before the data tables were obtained from different categorical files hence they had different number of rows and columns. As a result it was very challenging to connect any sort of relation between the variables. With the advice from my instruction, I tried to make two separate dataframes with variables of equal rows and columns to show correlation between them. My first data frame have Mass index with Body Blood Pressure and I used regression model to show their correlation and how they are affected with fluctuations in values. In second data frame, I used demographic variables to show different correlation within education, monthlyincome, poverty index, ethnic groups and gender. I have been successful to find out how one variable is correlated to another using the statistical methods.
+ 
+```{r,eval=FALSE}
+library(nhanesA)
+q2013names<-nhanesTables('Q',2013,namesonly = TRUE)
+q2013tables<-lapply(q2013names,nhanes)
+names(q2013tables)<-q2013names
+EXAM2013names<-nhanesTables('EXAM',2013,namesonly = TRUE)
+EXAM2013tables<-lapply(EXAM2013names,nhanes)
+names(EXAM2013tables)<-EXAM2013names
+DEMO2013names<-nhanesTables('DEMO',2013,namesonly =TRUE)
+DEMO2013tables<-lapply(EXAM2013names,nhanes)
+names(DEMO2013tables)<-DEMO2013names
+DIET2013names<-nhanesTables('DIET',2013,namesonly=TRUE)
+DIET2013tables<-lapply(DIET2013names,nhanes)
+names(DIET2013tables)<-DIET2013names
+``` 
+
+```{r}
+library(nhanesA)
+load(file="Projectable.rdata")
+newdata1 <-data.frame("UpBP" = Mytable$UpBP, "LoBP" = Mytable$LoBP, "wght" = Mytable$wght, "hght" = Mytable$hght, "massindx" = Mytable$massindx)
+newdata2 <- data.frame("pregst" = Mytable$pregst, "cbirth" = Mytable$cbirth, "race" = Mytable$race, "educ" = Mytable$educ, "hhinc" = Mytable$hhinc, "marst" = Mytable$marst, "timeUS" = Mytable$timeUS, "gendr" = Mytable$gendr, "FamPovIndex" = Mytable$FamPovIndex, "Monthinc" = Mytable$Monthinc, "TimeVisitedDoctor" = Mytable$TimesVisitedDoctor, "FoodConsumption" = Mytable$FoodConsumption)
+```
+
+* Regression Model
+```{r}
+library(car)
+library(stats)
+library(Hmisc)
+library(rms)
+#reg1<-lrm(massindx~UpBP,family=quantitative,data=newdata1)
+massindx <- Mytable$massindx
+summary(massindx)
+values <- massindx
+summary(massindx)
+results <- data.frame(values = values[values <= 100])
+s1 <- ifelse(results > 18 & results < 26, "Normal Range", ifelse(results < 18, "Underweight", ifelse(results > 25, "Overweight", NA)))
+massindx <- s1
+summary(massindx)
+
+massindx.counts = table(massindx)
+massindx.counts
+pct1 = (massindx.counts/sum(massindx.counts))*100
+pct = round(pct1, 2)
+labels = c("Normal Range", "Overweight", "Underweight")
+labels = paste(labels, pct1, "%")
+col = c("pink", "lightgreen", "lightblue")
+#pie(pct1, col = col, radius = 1, init.angle =90, clockwise=TRUE, labels = labels, main = "Title")
+library(plotrix)
+p = pie3D(pct1, labels = labels, labelcex = 1, explod = 0, col = col, main = "Title")
+p
+UpBP <- Mytable$UpBP
+values <- UpBP
+summary(UpBP)
+results <- data.frame(values=values[values <= 9999])
+s2 <- ifelse(results < 121, "Normal Range", ifelse(results > 120, "High BP", NA))
+UpBP <- s2
+summary(UpBP)
+table(massindx, UpBP)
+d<-data.frame("UpBP" = UpBP, "massindx" = massindx)
+dd <- data.frame("UpBP" = d$values, "massindx" = d$values.1)
+
+#rmpm1 <- glm(massindx ~ UpBP, family=binomial, data=dd)
+#summary(rmpm1)
+#confint(rmpm1)
+library(hexbin)
+MassIndex<-Mytable$massindx
+UpBp<-Mytable$UpBP
+plot(hexbin(MassIndex,UpBp))
+plot(MassIndex,UpBp,main="Scatterplot",col=rgb(0,100,0,50,maxColorValue = 255),pch=20)
+```
+
+We have created a hexbinplot to see the relationship between an individual's Upper Blood Pressure and Body Mass Index. We can see that majority of the individuals in the sample have Upper Blood Pressure around 110 with Mass index around 25. We can also notice a trend from the scatterplot and hexbin plot is that the higher the body mass index, the higher the Upper Blood pressure. There are not a lot of counts for UpBP about 110 when mass index is in 12-15 range. As soon as the mass index goes around 20, UpBP shoots up above 120 and as the mass index increases to 30, more UpBP is counted around 135 range. We can conclude that UpBP and Body mass Index share a positive correlation. As Body mass Index increases, Upper Blood Pressure increases.
+
+
+```{r}
+fit1<-lm(massindx~UpBP + LoBP,data=newdata1)
+summary(fit1)
+```
+
+We have run a regression equation considering massindex as the response variable, UpBP and LoBP as independent variable. Our aim with these statistical method is to figure out to what extent does UpBP and LoBP of an individual is influenced on mass index. We are able to see that an additional increase in Upper Blood Pressure causes the predicted mass index to increase by 0.089 unit. The t-stat >1.96 and the p-value is very small, thus we reject the Null Hypothesis (Co-efficient is zero). UpBP is statistically significant at 5% level. In general sense, UpBP does have significant positive effect on Mass index.
+
+An additional increase on the LoBP would increase mass index by 0.093 unit. The t-stat > 15.33 and the p-value is very small, thus we reject the Null Hypothesis (Co-efficient is zero). LoBP is statistically significant at 5% level. LoBP have significant positive effect on Mass index.
+Conclusively we can say that higher the UpBP and LoBP of an individual,higher is the body mass index of an individual. 
+
+
+
+
+
+```{r}
+mosaicplot(table(Mytable$race,Mytable$hhinc),main="Household Income distribution in different ethnic race ",ylab="income",xlab="race",cex.axis = 0.4,las =1)
+```
+
+The following scatterplot shows a little of bit story of how the household income is distributed amongs different ethnic group in our sample. Mexican Americans have more individuals in the middle income ($20,000-54,999). We can say they have somewhat normal income distribution with few people very rich and very poor but majority in middle-income level.
+
+Other Hispanic group also have somewhat normal income distribution.
+
+Non-Hispanic White have majority of the people in the lower income group ($10,000-50,000) and huge chunk of people in higher income group ($75,000-over).We can say they have high income inequality gap between rich and poor.
+
+Non-Hispanic Black have a normal distribution of income with majority of the people are middle-income group.
+
+Other races have less low-income group with majority of the sample population in middle and high-income group. Most of them are earning around $75,000-above.
+
+
+```{r}
+boxplot(Mytable$FamPovIndex~Mytable$race,ylab="PovertyIndex",main="Boxplot of poverty index for ethnic race",cex.axis=0.3,las=3)
+```
+
+We have plotted a barplot to see how the poverty index is distributed between ethnic groups. Mexican Americans have 75% percentile of their population between 1.05 - 1.9 poverty ratio. 50% percentile of mexican americans have poverty ratio of 1 with few outliers above index > 3.5 .
+
+Other Hispanics have 75% percentile poverty index between 1.5-2.5 and median about 1.3 . They have higher poverty index compared to Mexican Americans. 
+
+Non-Hispanic White have median poverty index at 2 and 75% percentile from 2.2-4. We can say that Hispanic White have higher poverty index compared to the initial ethnic groups.
+
+Non-Hispanic Black have lower poverty index with 75% percentile of the population between 1.4-2,3 poverty index. Their poverty level are somewhat similar to Other Hispanic group.
+
+Other race have the highest poverty index with median above 2 and 75% percentile is between 2.5- 4.2 poverty index.
+
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r}
+newdata2$incomelevel=factor(newdata2$Monthinc,levels = c("$0 - $399","$400 - $799","$800 - $1249","$1250 - $1649","$1650 - $2099","$2100 - $2899","$2900 - $3749","$3750 - $4599","$4600 - $5399","$5400 - $6249","$6250 - $8399","$8400 and over", "Refused","Don't know","NA's"),labels = c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15))
+newdata2$education=factor(newdata2$educ,levels = c("Less Than 9th Grade"," 9-11th Grade(Includes 12th grad High School","Grad/GED or Equivale ","Some College or AA degree","College Graduate or above","Refused","Don't Know","NA's"),labels = c(1,2,3,4,5,6,7,8))
+newdata2$TimeVisitedDoctor=factor(newdata2$TimeVisitedDoctor,levels=c("None","1","2 to 3","4 to 5","6 to 7","8 to 9","10 to 12","13 to 15","16 or more","Don't know"),labels=c(1,2,3,4,5,6,7,8,9,10))
+#newdata2$race=factor(newdata2$race,levels=c("Mexican American","Other Hispanic","Non-Hispanic White","Non-Hispanic Black Other Race","Including Multi-Rac"),labels=c(1,2,3,4,5))
+
+library(rpart)
+financial.category=c(rep("low",3),rep("lowmiddle",3),rep("uppermiddle",4),rep("high",2),rep("other",2))
+
+crazy.time=as.factor(financial.category[as.numeric(newdata2$Monthinc)])
+
+VisitedDoctor=c(rep("Less frequently",4),rep("frequently",5),rep("Don't know",1))
+
+visited.doctor=as.factor(VisitedDoctor[as.numeric(newdata2$TimeVisitedDoctor)])
+
+degree=c(rep("less than college",3),rep("college graduate",2),rep("don't know",2))
+
+deg=as.factor(degree[as.numeric(newdata2$educ)])
+
+
+fit3<-rpart(gendr~visited.doctor+crazy.time,data=newdata2)
+post(fit3, file ="tree.ps",title = "Classification Tree for gender visiting doctor",digits = 4)
+system("ps2pdf tree.ps tree.pdf")
+summary(fit3)
+```
+
+```{r}
+
+boxplot(newdata2$FamPovIndex~visited.doctor,ylab="PovertyIndex",main="Boxplot of poverty index and times visited doctor",cex.axis=1)
+```
+
+We also made a boxplot to see whether poverty index have any effect on an individual visiting doctor. We can see that there are no change in distribution of whether the sample visited doctor frequently or less frequently depending on poverty index. So the number of times an individual visited doctor have no relation to poverty index in Nhanes data set based on US residents as respondents.
+
+```{r}
+boxplot(newdata2$FamPovIndex~newdata2$educ,ylab="PovertyIndex",main="Boxplot of poverty index and education",cex.axis=0.5,las=2)
+```
+
+
+We have created a boxplot to see how the poverty index is affected by the level of education of the sample. We can see an interesting trend that as the level of education increases, the poverty level of the sample also increases. This is something out of the general thought as we believe that higher education would lead to higher income and lower poverty index. However, in our case we are seeing they are negatively correlated. College graduate or above have the highest level of poverty index who are more likely to have higher income than any other in the sample. They suffer with highest poverty index maybe because of the loans they have taken to pursue education. However, in developing countries it is seen that people with higher level of education experiences high poverty index. That is something we have able to notice different about the survey of US respondents.   
+
+
+
+```{r}
+mosaicplot(table(newdata2$TimeVisitedDoctor,newdata2$gendr),main="mosaicplot for times visited between gender",col="violet")
+```
+
+We have generated a mosaicplot to see how gender can affect the number of times an individual visited doctor. We can see something intriguing results that male are likely to visit the doctor only once but female visit doctors more frequently. At the end we can also we male visit doctors more when the number shoots to 10. We can deduce that male are likely to visit doctors when things get severe.
+
+
+
+<img src="tree.pdf">
+  
+  We have drawn a classification tree diagram to see how male and female visits doctor depending on their income level. In our sample we have more females than male and we can clearly see that income level has no significant effect on number of times visited doctor. In node 1, we can see that females with count of 5172 are likely to visit doctor more than males with probability 0.508. In node 2, out of 8178 observations male are less likely to visit doctor more than females with probability of 0.510. In node 3, out of 1997 observations female are likely to visit doctors more with 0.583 probability. Conclusively, we can deduce that female are more to visit doctors more frequently than male given the monthly income of the household has not effect on their decision.
+  
