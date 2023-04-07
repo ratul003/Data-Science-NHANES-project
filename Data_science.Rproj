@@ -1,5 +1,5 @@
-* My aim for this project is to analyse how socioeconomic status effects     health.    Socioeconomic status in my data can be referred to Income and      Poverty Index.     But there are also other factors that may play major role    in the socioeconomic status of an individual such as #hrs worked, legal    time in US, Maritial Status, Education Level, Race and Country of Birth.    Having said that, I'm looking forward to analyse the relation between      these factors and see how it impacts health condition using statistical    methods for eg Multivariate Regression Analysis. Also, my key data would
-be different health criteria such as blood pressure, #times visited a      doctor etc. I would be covering multiple aspects of health condition to    evaluate the relations more effectively with socioeconomic status.
+* My aim for this project is to analyse how socioeconomic status effects health. Socioeconomic status in my data can be referred to Income and Poverty Index. But there are also other factors that may play major role in the socioeconomic status of an individual such as #hrs worked, legal time in US, Maritial Status, Education Level, Race and Country of Birth. Having said that, I'm looking forward to analyse the relation between these factors and see how it impacts health condition using statistical methods for eg Multivariate Regression Analysis. Also, my key data would
+be different health criteria such as blood pressure, #times visited a doctor etc. I would be covering multiple aspects of health condition to evaluate the relations more effectively with socioeconomic status.
 
 * I'll be using the NHANES data package that is providing me with huge 
 data but I'll be breaking down into the variables that I would need to 
@@ -8,9 +8,9 @@ Examination Survey(NHANES), URL:
   https://cran.r-project.org/package=nhanesA in an SAS.'XPT' format. 
 
 * I have 4 types of NHANES tables and I would be using 'EXAM' ,        
-'DIET','QUESTIONARRE', 'DEMOGRAPHICS' for my anaylsis. I would be using    23 different tables with each column representing different      
+'DIET','QUESTIONARRE', 'DEMOGRAPHICS' for my anaylsis. I would be using 23 different tables with each column representing different      
 things.Again, I have selected columns of different variables that I 
-would be playing with. In this dataframe I have categorical variables.     and
+would be playing with. In this dataframe I have categorical variables.and
 quantitative variables. The factor variables would be   
 'hpt','gendr','marst','pregst','race' and 'cbirth'. The rest are 
 qualitative variables.
